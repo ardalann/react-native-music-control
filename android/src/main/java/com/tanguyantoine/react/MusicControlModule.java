@@ -10,6 +10,7 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
+import android.media.AudioManager;
 import android.util.Log;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -73,8 +74,12 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         session.setCallback(new MusicControlListener(context));
 
-        volume = new MusicControlListener.VolumeListener(context, true, 100);
-        session.setPlaybackToRemote(volume);
+        session.setPlaybackToLocal(AudioManager.STREAM_MUSIC);
+
+        // Buggy implmentation prevents hardware volume buttons from working.
+        //volume = new MusicControlListener.VolumeListener(context, true, 100);
+        //session.setPlaybackToRemote(volume);
+
 
         md = new MediaMetadataCompat.Builder();
         pb = new PlaybackStateCompat.Builder();
@@ -193,7 +198,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
 
         PlaybackStateCompat playbackState = pb.build();
         session.setPlaybackState(playbackState);
-        session.setPlaybackToRemote(volume.create(null, vol));
+        //session.setPlaybackToRemote(volume.create(null, vol)); // see line: 79
     }
 
     @ReactMethod
@@ -246,7 +251,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 controlValue = PlaybackStateCompat.ACTION_SET_RATING;
                 break;
             case "volume":
-                session.setPlaybackToRemote(volume.create(enable, null));
+                //session.setPlaybackToRemote(volume.create(enable, null)); // see line: 79
                 return;
             default:
                 // Unknown control type, let's just ignore it
