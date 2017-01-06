@@ -10,7 +10,6 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
-import android.media.AudioManager;
 import android.util.Log;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -74,12 +73,8 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         session.setCallback(new MusicControlListener(context));
 
-        session.setPlaybackToLocal(AudioManager.STREAM_MUSIC);
-
-        // Buggy implmentation prevents hardware volume buttons from working.
-        //volume = new MusicControlListener.VolumeListener(context, true, 100);
-        //session.setPlaybackToRemote(volume);
-
+        volume = new MusicControlListener.VolumeListener(context, true, 100);
+        session.setPlaybackToRemote(volume);
 
         md = new MediaMetadataCompat.Builder();
         pb = new PlaybackStateCompat.Builder();
@@ -91,9 +86,13 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
         notification.updateActions(controls);
 
         IntentFilter filter = new IntentFilter();
+        filter.setPriority(Integer.MAX_VALUE);
+        filter.addAction(MusicControlNotification.ACTION_PLAY);
+        filter.addAction(MusicControlNotification.ACTION_PAUSE);
+        filter.addAction(MusicControlNotification.ACTION_NEXT);
+        filter.addAction(MusicControlNotification.ACTION_PREVIOUS);
         filter.addAction(MusicControlNotification.REMOVE_NOTIFICATION);
-        filter.addAction(Intent.ACTION_MEDIA_BUTTON);
-        receiver = new MusicControlReceiver(notification, session);
+        receiver = new MusicControlReceiver(notification, session, context);
         context.registerReceiver(receiver, filter);
 
         context.startService(new Intent(context, MusicControlNotification.NotificationService.class));
@@ -198,7 +197,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
 
         PlaybackStateCompat playbackState = pb.build();
         session.setPlaybackState(playbackState);
-        //session.setPlaybackToRemote(volume.create(null, vol)); // see line: 79
+        session.setPlaybackToRemote(volume.create(null, vol));
     }
 
     @ReactMethod
@@ -251,7 +250,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 controlValue = PlaybackStateCompat.ACTION_SET_RATING;
                 break;
             case "volume":
-                //session.setPlaybackToRemote(volume.create(enable, null)); // see line: 79
+                session.setPlaybackToRemote(volume.create(enable, null));
                 return;
             default:
                 // Unknown control type, let's just ignore it

@@ -20,6 +20,14 @@ public class MusicControlNotification {
     private int smallIcon;
     private NotificationCompat.Action play, pause, stop, next, previous;
 
+    public static final String 	ACTION_PLAY		=	"com.tanguyantoine.react.ACTION_PLAY";
+    public static final String 	ACTION_PAUSE	=	"com.tanguyantoine.react.ACTION_PAUSE";
+    public static final String 	ACTION_PREVIOUS	=	"com.tanguyantoine.react.ACTION_PREVIOUS";
+    public static final String 	ACTION_NEXT		=	"com.tanguyantoine.react.ACTION_NEXT";
+    public static final String 	ACTION_STOP		=	"com.tanguyantoine.react.ACTION_STOP";
+    public static final String 	ACTION_SERVICE_INIT =	"com.tanguyantoine.react.ACTION_SERVICE_INIT";
+    public static final String  ACTION_PLAYMODE_UPDATE = "com.tanguyantoine.react.ACTION_PLAYMODE_UPDATE";
+
     public MusicControlNotification(ReactApplicationContext context) {
         this.context = context;
 
@@ -29,11 +37,11 @@ public class MusicControlNotification {
     }
 
     public void updateActions(long mask) {
-        play = createAction("play", "Play", mask, PlaybackStateCompat.ACTION_PLAY, play);
-        pause = createAction("pause", "Pause", mask, PlaybackStateCompat.ACTION_PAUSE, pause);
-        stop = createAction("stop", "Stop", mask, PlaybackStateCompat.ACTION_STOP, stop);
-        next = createAction("next", "Next", mask, PlaybackStateCompat.ACTION_SKIP_TO_NEXT, next);
-        previous = createAction("previous", "Previous", mask, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS, previous);
+        play = createAction("play", "Play", mask, ACTION_PLAY, play);
+        pause = createAction("pause", "Pause", mask, ACTION_PAUSE, pause);
+        stop = createAction("stop", "Stop", mask, ACTION_STOP, stop);
+        next = createAction("next", "Next", mask, ACTION_NEXT, next);
+        previous = createAction("previous", "Previous", mask, ACTION_PREVIOUS, previous);
     }
 
     public void show(NotificationCompat.Builder builder, boolean isPlaying) {
@@ -43,7 +51,7 @@ public class MusicControlNotification {
         if(previous != null) builder.addAction(previous);
         if(play != null && !isPlaying) builder.addAction(play);
         if(pause != null && isPlaying) builder.addAction(pause);
-        if(stop != null) builder.addAction(stop);
+        //if(stop != null) builder.addAction(stop);
         if(next != null) builder.addAction(next);
 
         builder.setOngoing(isPlaying);
@@ -68,33 +76,8 @@ public class MusicControlNotification {
         NotificationManagerCompat.from(context).cancel("MusicControl", 0);
     }
 
-    /**
-     * Code taken from newer version of PlaybackStateCompat.toKeyCode
-     * Replace this to PlaybackStateCompat.toKeyCode when React Native updates the support library
-     */
-    private int toKeyCode(long action) {
-        if(action == PlaybackStateCompat.ACTION_PLAY) {
-            return KeyEvent.KEYCODE_MEDIA_PLAY;
-        } else if(action == PlaybackStateCompat.ACTION_PAUSE) {
-            return KeyEvent.KEYCODE_MEDIA_PAUSE;
-        } else if(action == PlaybackStateCompat.ACTION_SKIP_TO_NEXT) {
-            return KeyEvent.KEYCODE_MEDIA_NEXT;
-        } else if(action == PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) {
-            return KeyEvent.KEYCODE_MEDIA_PREVIOUS;
-        } else if(action == PlaybackStateCompat.ACTION_STOP) {
-            return KeyEvent.KEYCODE_MEDIA_STOP;
-        } else if(action == PlaybackStateCompat.ACTION_FAST_FORWARD) {
-            return KeyEvent.KEYCODE_MEDIA_FAST_FORWARD;
-        } else if(action == PlaybackStateCompat.ACTION_REWIND) {
-            return KeyEvent.KEYCODE_MEDIA_REWIND;
-        } else if(action == PlaybackStateCompat.ACTION_PLAY_PAUSE) {
-            return KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
-        }
-        return KeyEvent.KEYCODE_UNKNOWN;
-    }
-
-    private NotificationCompat.Action createAction(String iconName, String title, long mask, long action, NotificationCompat.Action oldAction) {
-        if((mask & action) == 0) return null;
+    private NotificationCompat.Action createAction(String iconName, String title, long mask, String action, NotificationCompat.Action oldAction) {
+        //if((mask & action) == 0) return null;
         if(oldAction != null) return oldAction;
 
         Resources r = context.getResources();
@@ -102,9 +85,10 @@ public class MusicControlNotification {
         int icon = r.getIdentifier(iconName, "drawable", packageName);
 
         // Replace this to MediaButtonReceiver.buildMediaButtonPendingIntent when React Native updates the support library
-        int keyCode = toKeyCode(action);
-        Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-        intent.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        int keyCode = 8686;//toKeyCode(action);
+        //Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        Intent intent = new Intent(action);
+        //intent.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
         PendingIntent i = PendingIntent.getBroadcast(context, keyCode, intent, 0);
 
         return new NotificationCompat.Action(icon, title, i);
@@ -130,7 +114,7 @@ public class MusicControlNotification {
         }
 
     }
-    
+
     public Class getMainActivityClass() {
         String packageName = context.getPackageName();
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
