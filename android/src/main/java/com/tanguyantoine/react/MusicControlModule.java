@@ -3,6 +3,7 @@ package com.tanguyantoine.react;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.media.MediaMetadataCompat;
@@ -73,8 +74,10 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         session.setCallback(new MusicControlListener(context));
 
-        volume = new MusicControlListener.VolumeListener(context, true, 100);
-        session.setPlaybackToRemote(volume);
+        // Disable Remote Volume Control
+        //volume = new MusicControlListener.VolumeListener(context, true, 100);
+        //session.setPlaybackToRemote(volume);
+        session.setPlaybackToLocal(AudioManager.STREAM_MUSIC);
 
         md = new MediaMetadataCompat.Builder();
         pb = new PlaybackStateCompat.Builder();
@@ -197,7 +200,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
 
         PlaybackStateCompat playbackState = pb.build();
         session.setPlaybackState(playbackState);
-        session.setPlaybackToRemote(volume.create(null, vol));
+        //session.setPlaybackToRemote(volume.create(null, vol));
     }
 
     @ReactMethod
@@ -250,7 +253,7 @@ public class MusicControlModule extends ReactContextBaseJavaModule {
                 controlValue = PlaybackStateCompat.ACTION_SET_RATING;
                 break;
             case "volume":
-                session.setPlaybackToRemote(volume.create(enable, null));
+                //session.setPlaybackToRemote(volume.create(enable, null));
                 return;
             default:
                 // Unknown control type, let's just ignore it
